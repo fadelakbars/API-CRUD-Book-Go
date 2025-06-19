@@ -10,6 +10,7 @@ import (
 )
 
 func Router(app fiber.Router, db *gorm.DB) {
+	
 	repository := repository.NewBookRepository()
 	service := service.NewBookService(repository, db)
 	controller := controller.NewBookController(service)

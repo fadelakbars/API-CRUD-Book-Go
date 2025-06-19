@@ -28,7 +28,6 @@ func NewBookService(repo repository.BookRepository, db *gorm.DB) BookService {
 
 func (s *BookServiceImpl) FindAll(ctx context.Context) ([]domain.Book, error) {
 	return s.repo.FindAll(ctx, s.db)
-	
 }
 
 func (s *BookServiceImpl) FindByID(ctx context.Context, id uuid.UUID) (domain.Book, error) {

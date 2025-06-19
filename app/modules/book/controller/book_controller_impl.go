@@ -4,7 +4,9 @@ import (
 	"book-management/app/domain"
 	"book-management/app/helper"
 	"book-management/app/modules/book/service"
+	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -12,6 +14,7 @@ import (
 type BookControllerImpl struct {
 	service service.BookService
 }
+
 func NewBookController(service service.BookService) BookController {
 	return &BookControllerImpl{service: service}
 }
@@ -37,11 +40,23 @@ func (c *BookControllerImpl) GetBookByID(ctx *fiber.Ctx) error {
 	return helper.WriteJson(ctx, fiber.StatusOK, "Book fetched successfully", book)
 }
 
+var validate = validator.New()
+
 func (c *BookControllerImpl) CreateBook(ctx *fiber.Ctx) error {
 	var book domain.Book
 	if err := ctx.BodyParser(&book); err != nil {
 		return helper.HandleError(ctx, err, fiber.StatusBadRequest, "Invalid request body")
 	}
+
+	if err := validate.Struct(book); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		var messages []string
+		for _, fieldErr := range validationErrors {
+			messages = append(messages, fieldErr.Field()+" is "+fieldErr.Tag())
+		}
+		return helper.HandleError(ctx, err, fiber.StatusBadRequest, strings.Join(messages, ", "))
+	}
+
 	book, err := c.service.Create(ctx.Context(), book)
 	if err != nil {
 		return helper.HandleError(ctx, err, fiber.StatusInternalServerError, "Failed to create book")
